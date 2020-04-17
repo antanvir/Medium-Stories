@@ -1,25 +1,19 @@
-# # !pip install --upgrade gensim
-# !pip install -U -q PyDrive
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
-# from google.colab import auth
-from oauth2client.client import GoogleCredentials
-# from google.colab import files
 import    pandas     as pd
 
 # Authenticate and create the PyDrive client.
 # This only needs to be done once per notebook.
 
-# auth.authenticate_user()
+
 gauth = GoogleAuth()
 gauth.LocalWebserverAuth()
-# gauth.credentials = GoogleCredentials.get_application_default()
 drive = GoogleDrive(gauth)
 
 
-# PUT YOUR FILE ID AND NAME HERE
+# PUT YOUR FILE ID AND ANY-NAME HERE
 file_id   = '15IEFRTSH-9JniOkdZm-Hon9QQayXluYX'  
-file_name      = "multiple-sheets-experiment By ANT.xlsx"
+file_name      = "multiple-sheets-experiment By ANT.xlsx"  # You can use existing drive file name / totally different name
 
 # Get contents of your drive file into the desired file. Here contents are stored in the file specified by 'file_name'
 downloaded = drive.CreateFile({'id': file_id})
@@ -35,29 +29,33 @@ for sheet in sheetNames:
     df[sheet].drop_duplicates(subset=['Name'], keep="first", inplace=True)
     df[sheet]['Calculated Fine'] = df[sheet]['Absent Days'] * 10
 
+# START [1] ------------- TO UPDATE EXISTING FILE --------------
 
-# def updateFileInColab(colabFolder):
-#     file_list = drive.ListFile({'q': "'%s' in parents and trashed=false" % colabFolder}).GetList()
-#     for f in file_list:
-#       if f['title'] == file_name:
-#         with pd.ExcelWriter('output.xlsx') as writer:
-#             for sheet in sheetNames:
-#                 df[sheet].to_excel(writer, sheet_name=sheet) 
-#             writer.save()
-#             writer.close()
-#         f.SetContentFile("output.xlsx")
-#         f.Upload() 
-#         break
-
-
-# file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
-# for f in file_list:
-#   if f['title'] == 'Colab Notebooks':
-#     print('File:', f)
-#     updateFileInColab(f['id'])
-#     break
+def updateFileInColab(colabFolder):
+    file_list = drive.ListFile({'q': "'%s' in parents and trashed=false" % colabFolder}).GetList()
+    for f in file_list:
+      if f['title'] == file_name:
+        with pd.ExcelWriter('output.xlsx') as writer:
+            for sheet in sheetNames:
+                df[sheet].to_excel(writer, sheet_name=sheet) 
+            writer.save()
+            writer.close()
+        f.SetContentFile("output.xlsx")
+        f.Upload() 
+        break
 
 
+file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+for f in file_list:
+  if f['title'] == 'Colab Notebooks':
+    print('File:', f)
+    updateFileInColab(f['id'])
+    break
+
+
+# END [1]
+
+# START [2] ------------- TO CREATE A NEW FILE --------------
 
 
 def createNewFile(colabFolder):
@@ -79,3 +77,6 @@ for f in file_list:
         print('File:', f)
         createNewFile(f['id'])
         break
+  
+
+# END [2]
